@@ -1,0 +1,12 @@
+version: '3.2'
+
+services:
+  convertor:
+    build:
+      context: .
+    ports:
+      - 3000:3000
+    restart: always
+    command: ./node_modules/nodemon/bin/nodemon.js src/app.js
+    volumes:
+      - ./src:/opt/node_app/src
