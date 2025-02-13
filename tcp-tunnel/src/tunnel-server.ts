@@ -1,7 +1,5 @@
-import net from 'node:net';
-import express, { Request, Response } from 'express';
-
-const server = express();
+import net, { createConnection } from 'node:net';
+import http, { IncomingMessage, ServerResponse } from 'node:http';
 
 const sockets: Map<string, net.Server> = new Map();
 
@@ -38,7 +36,25 @@ const getTunnelInfo = (tunnel: net.Server) =>
     });
   });
 
-server.post('/tunnels', async (req: Request, res: Response) => {
+const getTCPRequest = (req: IncomingMessage) => {
+  // Construct the HTTP request to forward
+  const requestData = `${req.method} ${req.url} HTTP/1.1\r\n`;
+  const headers = Object.entries(req.headers)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\r\n');
+
+  return `${requestData}${headers}\r\n\r\n`;
+};
+
+const getJSONResponse = (data: Object, res: ServerResponse) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+};
+
+const createTunnelHandler = async (
+  _req: IncomingMessage,
+  res: ServerResponse
+) => {
   // Check if we have a tunnel
   let tunnel = sockets.get('localhost');
   if (!tunnel) {
@@ -50,58 +66,106 @@ server.post('/tunnels', async (req: Request, res: Response) => {
   }
 
   // Return the port
-  res.json({
-    port: (tunnel as any).address().port,
-  });
-});
+  getJSONResponse(
+    {
+      port: (tunnel as any).address().port,
+    },
+    res
+  );
+};
 
-server.get('/status', async (_req: Request, res: Response) => {
+const statusHandler = async (_req: IncomingMessage, res: ServerResponse) => {
   const tunnel = sockets.get('localhost');
 
   if (!tunnel) {
-    return res.json({
-      localhost: null,
-    });
+    return getJSONResponse(
+      {
+        localhost: null,
+      },
+      res
+    );
   }
 
-  res.json({
-    localhost: await getTunnelInfo(tunnel),
-  });
-});
+  getJSONResponse(
+    {
+      localhost: await getTunnelInfo(tunnel),
+    },
+    res
+  );
+};
 
-server.post('/request', (req: Request, res: Response) => {
+const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
   const tunnel = sockets.get('localhost');
 
   if (!tunnel) {
-    return res.json({
-      error: 'TUNNEL_NOT_FOUND',
-    });
+    return getJSONResponse(
+      {
+        error: 'TUNNEL_NOT_FOUND',
+      },
+      res
+    );
   }
 
   if (!socket) {
-    return res.json({
-      error: 'NO_CONNECTIONS',
-    });
+    return getJSONResponse(
+      {
+        error: 'NO_CONNECTIONS',
+      },
+      res
+    );
   }
 
-  const requestData = JSON.stringify({
+  console.log('SOCKET', socket.wrap);
+
+  console.log('RES_SOCKET', res?.socket?.wrap);
+
+  // const requestData = getTCPRequest(req);
+  // socket.write(requestData);
+
+  const requestData = {
+    path: req.url,
     method: req.method,
-    url: req.url,
     headers: req.headers,
-    // body: req.body,
-  });
+    createConnection() {
+      return socket;
+    },
+  };
 
-  socket.write(requestData);
+  const clientRequest = http.request(
+    requestData,
+    (clientRes: IncomingMessage) => {
+      res.writeHead(clientRes.statusCode, clientRes.headers);
+      clientRes.pipe(res);
+    }
+  );
 
-  res.json({
-    done: true,
-  });
-});
+  req.pipe(clientRequest);
+};
 
-// server.on('upgrade', (req, socket, head) => {
+const server = http.createServer(
+  (req: IncomingMessage, res: ServerResponse) => {
+    console.log('REQ_', req.url, req.method);
 
-// });
+    if (
+      req.url.startsWith('/status') &&
+      req.method.toLocaleLowerCase() === 'get'
+    ) {
+      return statusHandler(req, res);
+    }
+
+    if (
+      req.url.startsWith('/tunnels') &&
+      req.method.toLocaleLowerCase() === 'post'
+    ) {
+      return createTunnelHandler(req, res);
+    }
+
+    return requestHandler(req, res);
+  }
+);
 
 server.listen(3000, () => {
-  console.log('SERVER_STARTED');
+  console.log('SERVER_STARTED', {
+    port: 3000,
+  });
 });

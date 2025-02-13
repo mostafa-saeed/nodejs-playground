@@ -6,9 +6,9 @@
     "start:server": "node src/server",
     "start:tunnel": "node src/tunnel",
     "dev:server": "nodemon --exec ts-node src/server",
-    "dev:tunnel-server": "nodemon --exec ts-node src/tunnel-server.ts",
-    "dev:tunnel": "nodemon src/tunnel",
-    "invoke": "nodemon --exec ts-node src/command.ts",
+    "dev:tunnel-server": "nodemon --exec ts-node src/tunnel-server",
+    "dev:tunnel": "nodemon --exec ts-node src/tunnel",
+    "invoke": "nodemon --exec ts-node src/command",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
