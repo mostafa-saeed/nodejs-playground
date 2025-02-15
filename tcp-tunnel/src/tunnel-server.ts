@@ -115,13 +115,6 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
     );
   }
 
-  console.log('SOCKET', socket.wrap);
-
-  console.log('RES_SOCKET', res?.socket?.wrap);
-
-  // const requestData = getTCPRequest(req);
-  // socket.write(requestData);
-
   const requestData = {
     path: req.url,
     method: req.method,
