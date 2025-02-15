@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start:server": "node src/server",
-    "start:tunnel": "node src/tunnel",
+    "invoke": "ts-node src/command",
+    "start:server": "ts-node src/server",
+    "start:tunnel": "ts-node src/tunnel",
+    "start:tunnel-server": "ts-node src/tunnel-server",
     "dev:server": "nodemon --exec ts-node src/server",
     "dev:tunnel-server": "nodemon --exec ts-node src/tunnel-server",
     "dev:tunnel": "nodemon --exec ts-node src/tunnel",
-    "invoke": "nodemon --exec ts-node src/command",
+    "dev:invoke": "nodemon --exec ts-node src/command",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
