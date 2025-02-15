@@ -1,4 +1,4 @@
-import net, { createConnection } from 'node:net';
+import net, { AddressInfo } from 'node:net';
 import http, { IncomingMessage, ServerResponse } from 'node:http';
 
 const sockets: Map<string, net.Server> = new Map();
@@ -13,6 +13,8 @@ const createTCPServer = (): Promise<net.Server> => {
     socket.on('error', (error) => {
       console.log('SOCKET_ERROR', error);
     });
+
+    socket.on('close', () => (socket = null));
 
     console.log('SOCKET_CONNECTED', soc.address());
   });
@@ -31,7 +33,7 @@ const getTunnelInfo = (tunnel: net.Server) =>
 
       resolve({
         count,
-        port: (tunnel as any).address().port,
+        port: (tunnel.address() as AddressInfo).port,
       });
     });
   });
@@ -68,7 +70,7 @@ const createTunnelHandler = async (
   // Return the port
   getJSONResponse(
     {
-      port: (tunnel as any).address().port,
+      port: (tunnel.address() as AddressInfo).port,
     },
     res
   );
