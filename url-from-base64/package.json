@@ -1,0 +1,23 @@
+{
+  "name": "url-from-base64",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "src/app.ts",
+  "scripts": {
+    "dev:server": "nodemon --exec ts-node --esm src/app.ts",
+    "invoke": "ts-node --esm src/command.ts",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "file-type": "^20.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2"
+  }
+}
