@@ -1,6 +1,9 @@
+import { createBrotliDecompress } from 'node:zlib';
+import { Readable } from 'node:stream';
 import express, { Request, Response } from 'express';
-import Mime from 'mime';
+import { Base64Decode } from 'base64-stream';
 import { fileTypeFromBuffer } from 'file-type';
+import Mime from 'mime';
 
 const BASE64_REGEX =
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -9,10 +12,10 @@ const isValidHash = (hash: string) => BASE64_REGEX.test(hash);
 
 const server = express();
 
-server.get('/url/:hash', async (req: Request, res: Response) => {
-  const { hash } = req.params;
-  const decodedHash = decodeURIComponent(hash);
-  const isValid = isValidHash(decodedHash);
+server.get('/url/:base64', async (req: Request, res: Response) => {
+  const { base64 } = req.params;
+  const decodedBase64 = decodeURIComponent(base64);
+  const isValid = isValidHash(decodedBase64);
 
   if (!isValid) {
     res.json({
@@ -23,7 +26,7 @@ server.get('/url/:hash', async (req: Request, res: Response) => {
     return;
   }
 
-  const buffer = Buffer.from(decodedHash, 'base64');
+  const buffer = Buffer.from(decodedBase64, 'base64');
 
   const fileType = await fileTypeFromBuffer(buffer);
   if (!fileType) {
@@ -41,10 +44,10 @@ server.get('/url/:hash', async (req: Request, res: Response) => {
   res.send(buffer);
 });
 
-server.get('/url/:hash/:filename', (req: Request, res: Response) => {
-  const { hash, filename } = req.params;
-  const decodedHash = decodeURIComponent(hash);
-  const isValid = isValidHash(decodedHash);
+server.get('/url/:base64/:filename', (req: Request, res: Response) => {
+  const { base64, filename } = req.params;
+  const decodedBase64 = decodeURIComponent(base64);
+  const isValid = isValidHash(decodedBase64);
 
   if (!isValid) {
     res.json({
@@ -55,12 +58,14 @@ server.get('/url/:hash/:filename', (req: Request, res: Response) => {
     return;
   }
 
-  const buffer = Buffer.from(decodedHash, 'base64');
   const mime = Mime.getType(filename);
 
   res.setHeader('Content-Type', mime);
   res.setHeader('Content-Disposition', `attachment;filename="${filename}"`);
-  res.send(buffer);
+  Readable.from(decodedBase64)
+    .pipe(new Base64Decode())
+    .pipe(createBrotliDecompress())
+    .pipe(res);
 });
 
 server.listen(3000, () => {
