@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import { basename } from 'node:path';
 
 const ENDPOINT = 'http://localhost:3000/url';
 
@@ -13,5 +14,7 @@ const ENDPOINT = 'http://localhost:3000/url';
     encoding: 'base64',
   });
 
-  console.log(`${ENDPOINT}/${encodeURIComponent(hash)}`);
+  const filename = basename(path);
+
+  console.log(`${ENDPOINT}/${encodeURIComponent(hash)}/${filename}`);
 })();

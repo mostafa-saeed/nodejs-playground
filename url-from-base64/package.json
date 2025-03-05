@@ -13,7 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
-    "file-type": "^20.1.0"
+    "file-type": "^20.1.0",
+    "mime": "^4.0.6"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

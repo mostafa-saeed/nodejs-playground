@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import Mime from 'mime';
 import { fileTypeFromBuffer } from 'file-type';
 
 const BASE64_REGEX =
@@ -35,8 +36,30 @@ server.get('/url/:hash', async (req: Request, res: Response) => {
   res.setHeader('Content-Type', fileType.mime);
   res.setHeader(
     'Content-Disposition',
-    `attachment;filename="file.${fileType.ext}`
+    `attachment;filename="file.${fileType.ext}"`
   );
+  res.send(buffer);
+});
+
+server.get('/url/:hash/:filename', (req: Request, res: Response) => {
+  const { hash, filename } = req.params;
+  const decodedHash = decodeURIComponent(hash);
+  const isValid = isValidHash(decodedHash);
+
+  if (!isValid) {
+    res.json({
+      success: false,
+      error: 'WRONG_BASE_64',
+    });
+
+    return;
+  }
+
+  const buffer = Buffer.from(decodedHash, 'base64');
+  const mime = Mime.getType(filename);
+
+  res.setHeader('Content-Type', mime);
+  res.setHeader('Content-Disposition', `attachment;filename="${filename}"`);
   res.send(buffer);
 });
 
