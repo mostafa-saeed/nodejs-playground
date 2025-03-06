@@ -6,11 +6,13 @@
 
 - File size limit
 
-- File compression before sending it 🔃
+- File compression before sending it ✅
 
   - We can compress on client side ✅
     - We then will need to decompress on the server side ✅
-  - If browser support we can return compressed data directly
+  - If browser support we can return compressed data directly ✅
+
+- Use ZStandard Algorithm https://developer.mozilla.org/en-US/docs/Glossary/Zstandard_compression
 
 ## References
 
