@@ -1,6 +1,6 @@
 import { createBrotliDecompress } from 'node:zlib';
 import { Readable } from 'node:stream';
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { Base64Decode } from 'base64-stream';
 import { fileTypeFromBuffer } from 'file-type';
 import Mime from 'mime';
@@ -94,6 +94,23 @@ server.get('/url/:base64/:filename', (req: Request, res: Response) => {
   }
 
   stream.pipe(res);
+});
+
+server.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
+  console.log(
+    `ERROR: ${error.message}`,
+    JSON.stringify({
+      path: req.path,
+      timestamp: Date.now(),
+      message: error.message,
+      callStack: error.stack,
+    })
+  );
+
+  res.send({
+    success: false,
+    error: 'INTERNAL_SERVER_ERROR',
+  });
 });
 
 server.listen(3000, () => {
